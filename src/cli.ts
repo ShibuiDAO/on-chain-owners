@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 
+import cleanCmd from '#commands/clean';
+import infoCmd from '#commands/info';
+import nftsCmd from '#commands/nfts';
 import { Command } from 'commander';
 import { readFile } from 'fs/promises';
 import { URL } from 'url';
-
-import cleanCmd from '#commands/clean';
-import infoCmd from '#commands/info';
-import mergeCmd from '#commands/merge';
-import nftsCmd from '#commands/nfts';
-import ntfxCmd from '#commands/nftx';
 
 const owners = new Command();
 
@@ -30,29 +27,8 @@ owners //
 
 owners //
 	.command('nfts')
-	.argument('<addressOrPreset>', 'Contract address or preset containing it')
+	.argument('<address>', 'Contract address')
 	.argument('<block>', 'Block number')
 	.action(nftsCmd);
-
-owners //
-	.command('nftx')
-	.argument('<preset>', 'Vault preset')
-	.argument('<block>', 'Block number')
-	// @ts-expect-error Passing args.
-	.action((...args) => ntfxCmd(false, ...args));
-
-owners //
-	.command('all')
-	.alias('a')
-	.argument('<preset>', 'uwulabs project preset')
-	.argument('<block>', 'Block number')
-	.action(async (...args) => {
-		cleanCmd();
-		// @ts-expect-error Passing args.
-		await nftsCmd(...args);
-		// @ts-expect-error Passing args.
-		await ntfxCmd(true, ...args);
-		mergeCmd();
-	});
 
 owners.parse(process.argv);

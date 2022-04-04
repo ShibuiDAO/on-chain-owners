@@ -1,23 +1,20 @@
 import { EIP721_BASIC_ABI, publicMainnetProvider } from '#constants';
-import { excludeUsingGlobals } from '#functions/exclude';
 import { NFT_BALANCES } from '#functions/graph/queries';
-import presets from '#functions/presets';
 import { Contract } from 'ethers';
 import { mkdirSync, writeFileSync } from 'fs';
 import { request } from 'graphql-request';
 import ora from 'ora';
 
-export default async (addressOrPreset: string, block: number) => {
-	const spinner = ora(`Grabbing holdings of "${addressOrPreset}"`).start();
+export default async (address: string, block: number) => {
+	const spinner = ora(`Grabbing holdings of "${address}"`).start();
 	const fail = (error: string) => {
 		spinner.fail(error);
 		process.exit(1);
 	};
 
-	const preset = presets.get(addressOrPreset);
-	if (!addressOrPreset.startsWith('0x') && preset) addressOrPreset = preset.nft;
+	address = address.toLowerCase();
 
-	const contract = new Contract(addressOrPreset, EIP721_BASIC_ABI, publicMainnetProvider);
+	const contract = new Contract(address, EIP721_BASIC_ABI, publicMainnetProvider);
 	const totalSupply = await contract.totalSupply().catch(() => fail('"totalSupply" call failed'));
 
 	const supplyBlocks = Math.ceil(totalSupply / 999);
@@ -25,8 +22,8 @@ export default async (addressOrPreset: string, block: number) => {
 
 	for (let i = 0; i < supplyBlocks; ++i) {
 		const holdingData = await request(
-			'https://api.thegraph.com/subgraphs/name/quantumlyy/eip721-subgraph-mainnet',
-			NFT_BALANCES(addressOrPreset, Number(block), 999, i * 999)
+			'https://api.thegraph.com/subgraphs/name/quantumlyy/eip721-subgraph-boba',
+			NFT_BALANCES(address, Number(block), 999, i * 999)
 		).catch((err) => fail(`holders query failed\n${err}`));
 
 		const holdings = holdingData?.erc721Contract?.tokens || [];
@@ -40,15 +37,6 @@ export default async (addressOrPreset: string, block: number) => {
 	}
 
 	for (const entry of [...holderEntries.keys()]) if (holderEntries.get(entry) === 0) holderEntries.delete(entry);
-
-	if (preset) {
-		const { xToken, vToken, slp, forcedExclusions } = preset;
-		holderEntries.delete(xToken);
-		holderEntries.delete(vToken);
-		holderEntries.delete(slp);
-		for (const exclusion of forcedExclusions) holderEntries.delete(exclusion);
-	}
-	holderEntries = excludeUsingGlobals(holderEntries);
 
 	holderEntries = new Map([...holderEntries.entries()].sort((a, b) => b[1] - a[1]));
 

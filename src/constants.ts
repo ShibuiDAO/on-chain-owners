@@ -1,7 +1,7 @@
 import { providers } from 'ethers';
 
-export const PUBLIC_MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161';
-export const publicMainnetProvider = new providers.JsonRpcProvider(PUBLIC_MAINNET_RPC_URL, 1);
+export const PUBLIC_BOBA_RPC_URL = 'https://lightning-replica.boba.network';
+export const publicMainnetProvider = new providers.JsonRpcProvider(PUBLIC_BOBA_RPC_URL, 288);
 
 export const TOKEN_BASE_ABI = [
 	{
